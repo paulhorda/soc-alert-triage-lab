@@ -1,29 +1,26 @@
-# Authentication triage report
+# Authentication alerts
 
-> Generated from fictional events. Signals require investigation; this is not evidence of a real intrusion.
+1,231 generated events. 4 alerts. All times are UTC.
 
-![Detection summary](dashboard.svg)
-
-## Alert queue
-
-| Rule | UTC time | Severity | Source | Evidence events |
+| Rule | Time | Priority | Source | Evidence events |
 |---|---|---|---|---|
 | AUTH-001 | 2026-09-15T14:04:00Z | medium | 203.0.113.42 | 5 |
 | AUTH-003 | 2026-09-15T14:08:00Z | high | 203.0.113.42 | 9 |
 | AUTH-002 | 2026-09-15T16:05:00Z | medium | 198.51.100.23 | 6 |
 | AUTH-001 | 2026-09-15T17:04:00Z | medium | 10.20.0.250 | 5 |
 
-## Triage interpretation
+## Review order
 
-- AUTH-003 is the first review priority: a successful login follows repeated failures for the same user, source and service. This could be malicious access or a legitimate user recovering from a password problem.
-- AUTH-002 identifies failures across distinct users. Password spraying is a hypothesis; the log does not reveal whether the same password was used.
-- AUTH-001 alone can arise from a stale service credential or user mistakes. Source ownership, user confirmation and maintenance records are needed.
-- AUTH-001 and AUTH-003 can describe the same sequence; alert count is not incident count.
+Start with AUTH-003: a successful login follows repeated failures. Check the account, MFA and device context before deciding whether access was unauthorized.
 
-## Evidence and next steps
+AUTH-002 needs a check of the source and affected accounts. The pattern is consistent with spraying, but passwords are not logged.
 
-[Complete alert evidence](alerts.json) · [Evidence timeline](evidence_timeline.csv) · [Incident walkthrough](../docs/incident-walkthrough.md) · [Triage runbook](../docs/triage-runbook.md)
+AUTH-001 can also result from a stale service credential or typing mistakes. One such benign case is included in this sample.
 
-## Evaluation boundary
+AUTH-001 and AUTH-003 can refer to the same sequence. Alert counts are not incident counts.
 
-The generator includes a benign stale-credential case that alerts and a slow cross-user sequence that the short-window rules miss. Ground-truth scenario labels live separately in `data/scenario_labels.json` and are never read by the detector. Passing these fixtures does not establish production precision, recall or readiness.
+## Evidence
+
+[Alert objects](alerts.json) · [Timeline](evidence_timeline.csv) · [Case notes](../docs/incident-walkthrough.md) · [Triage checklist](../docs/triage-runbook.md)
+
+The slow sequence in the sample produces no alert. Scenario labels are stored separately in `data/scenario_labels.json`; the detector does not read them.

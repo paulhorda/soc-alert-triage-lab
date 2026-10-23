@@ -109,27 +109,6 @@ def detect(events, config=None):
     return alerts
 
 
-def dashboard(events, alerts):
-    counts = Counter(alert['rule_id'] for alert in alerts)
-    parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="480" viewBox="0 0 1080 480" role="img" aria-labelledby="title desc">',
-             '<title id="title">SOC authentication triage lab</title><desc id="desc">Synthetic events with three detection rules and an explicit slow-spray blind spot.</desc>',
-             '<rect width="1080" height="480" rx="20" fill="#0b1220"/><g font-family="Arial, sans-serif" fill="#e7edf5">',
-             '<text x="40" y="49" font-size="14" fill="#93c5fd">SECURITY OPERATIONS / DETECTION + TRIAGE</text>',
-             '<text x="40" y="92" font-size="30" font-weight="700">From authentication events to evidence</text>',
-             '<text x="40" y="122" font-size="14" fill="#a8b8cf">Offline portfolio lab · Fictional events · No live systems contacted</text>',
-             f'<text x="40" y="185" font-size="28" font-weight="700">{len(events):,} events → {len(alerts)} alerts → analyst review</text>']
-    for x, rule_id in zip([40,380,720], RULES):
-        title, severity, _ = RULES[rule_id]
-        short = {'AUTH-001':'Repeated failures','AUTH-002':'Multiple accounts','AUTH-003':'Success after failures'}[rule_id]
-        parts += [f'<rect x="{x}" y="225" width="320" height="130" rx="10" fill="#162236"/>',
-                  f'<text x="{x+20}" y="257" font-size="13" fill="#a8b8cf">{rule_id} / {severity.upper()}</text>',
-                  f'<text x="{x+20}" y="291" font-size="18">{short}</text>',
-                  f'<text x="{x+20}" y="331" font-size="25" fill="#93c5fd">{counts[rule_id]} alert(s)</text>']
-    parts += ['<text x="40" y="408" font-size="14" fill="#a8b8cf">A signal is not a verdict. Review user context, MFA, device and follow-on activity.</text>',
-              '<text x="40" y="437" font-size="13" fill="#a8b8cf">Includes a benign credential-failure scenario and a deliberately missed slow-spray sequence.</text>', '</g></svg>']
-    return '\n'.join(parts)+'\n'
-
-
 def run(input_path=ROOT / 'data/auth_events.jsonl', output=ROOT / 'reports', rules_path=ROOT / 'rules/auth_rules.json'):
     events = read_events(input_path)
     config = json.loads(rules_path.read_text())
@@ -146,20 +125,18 @@ def run(input_path=ROOT / 'data/auth_events.jsonl', output=ROOT / 'reports', rul
                'by_rule': dict(sorted(Counter(a['rule_id'] for a in alerts).items())),
                'by_severity': dict(sorted(Counter(a['severity'] for a in alerts).items()))}
     (output / 'summary.json').write_text(json.dumps(summary, indent=2)+'\n')
-    (output / 'dashboard.svg').write_text(dashboard(events, alerts))
-    lines = ['# Authentication triage report', '', '> Generated from fictional events. Signals require investigation; this is not evidence of a real intrusion.', '',
-             '![Detection summary](dashboard.svg)', '', '## Alert queue', '', '| Rule | UTC time | Severity | Source | Evidence events |', '|---|---|---|---|---|']
+    lines = ['# Authentication alerts', '', f'{len(events):,} generated events. {len(alerts)} alerts. All times are UTC.', '',
+             '| Rule | Time | Priority | Source | Evidence events |', '|---|---|---|---|---|']
     for alert in alerts:
         lines.append(f'| {alert["rule_id"]} | {alert["detected_at"]} | {alert["severity"]} | {alert["source_ip"]} | {len(alert["evidence_event_ids"])} |')
-    lines += ['', '## Triage interpretation', '',
-              '- AUTH-003 is the first review priority: a successful login follows repeated failures for the same user, source and service. This could be malicious access or a legitimate user recovering from a password problem.',
-              '- AUTH-002 identifies failures across distinct users. Password spraying is a hypothesis; the log does not reveal whether the same password was used.',
-              '- AUTH-001 alone can arise from a stale service credential or user mistakes. Source ownership, user confirmation and maintenance records are needed.',
-              '- AUTH-001 and AUTH-003 can describe the same sequence; alert count is not incident count.', '',
-              '## Evidence and next steps', '',
-              '[Complete alert evidence](alerts.json) · [Evidence timeline](evidence_timeline.csv) · [Incident walkthrough](../docs/incident-walkthrough.md) · [Triage runbook](../docs/triage-runbook.md)', '',
-              '## Evaluation boundary', '',
-              'The generator includes a benign stale-credential case that alerts and a slow cross-user sequence that the short-window rules miss. Ground-truth scenario labels live separately in `data/scenario_labels.json` and are never read by the detector. Passing these fixtures does not establish production precision, recall or readiness.', '']
+    lines += ['', '## Review order', '',
+              'Start with AUTH-003: a successful login follows repeated failures. Check the account, MFA and device context before deciding whether access was unauthorized.', '',
+              'AUTH-002 needs a check of the source and affected accounts. The pattern is consistent with spraying, but passwords are not logged.', '',
+              'AUTH-001 can also result from a stale service credential or typing mistakes. One such benign case is included in this sample.', '',
+              'AUTH-001 and AUTH-003 can refer to the same sequence. Alert counts are not incident counts.', '',
+              '## Evidence', '',
+              '[Alert objects](alerts.json) · [Timeline](evidence_timeline.csv) · [Case notes](../docs/incident-walkthrough.md) · [Triage checklist](../docs/triage-runbook.md)', '',
+              'The slow sequence in the sample produces no alert. Scenario labels are stored separately in `data/scenario_labels.json`; the detector does not read them.', '']
     (output / 'triage-report.md').write_text('\n'.join(lines))
     return summary
 

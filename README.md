@@ -1,18 +1,24 @@
-# SOC Alert Triage Lab
+# Authentication alert triage
 
-**Python · Authentication logs · Detection rules · Evidence timelines · Incident triage**
+A Python detector for repeated login failures, attempts against multiple accounts and successful logins after failures.
 
-An offline blue-team portfolio lab that turns normalized authentication events into a reviewable alert queue. Includes testable detection logic, evidence IDs, a triage runbook and an investigation walkthrough.
+The sample has 1,231 generated events. It produces four alerts: two for the same suspicious sequence, one for a multi-account sequence and one for a stale service credential. [See the report](reports/triage-report.md).
 
-> All events, identities and incidents are fictional. Public-looking IPs are documentation addresses. This project analyzes local files only.
+## Rules
 
-![SOC lab summary](reports/dashboard.svg)
+| Rule | Condition |
+|---|---|
+| AUTH-001 | Five failures within ten minutes for the same user, IP and service |
+| AUTH-002 | Failures against six different users within ten minutes from the same IP and service |
+| AUTH-003 | A success after at least five failures in the preceding fifteen minutes, for the same user, IP and service |
 
-**[Open the triage report](reports/triage-report.md)** · **[Inspect alerts](reports/alerts.json)** · **[Read the investigation](docs/incident-walkthrough.md)**
+[Thresholds](rules/auth_rules.json) can be changed. Each rule has a thirty-minute cooldown per scope. Alerts include the event IDs that triggered them; later events suppressed by the cooldown are not added to the original alert.
 
-## Run locally
+The failure patterns relate to MITRE ATT&CK [Password Guessing](https://attack.mitre.org/techniques/T1110/001/) and [Password Spraying](https://attack.mitre.org/techniques/T1110/003/). The logs alone cannot establish the password used or whether a successful login was unauthorized.
 
-Python 3.10+; standard library only. No SIEM account, external service or API key required.
+## Run
+
+Python 3.10 or later. No extra packages.
 
 ```bash
 python3 src/generate_logs.py
@@ -20,45 +26,24 @@ python3 src/detect.py
 python3 -m unittest discover -s tests -v
 ```
 
-For a separate file following [the documented schema](docs/event-schema.md):
+To use another file with [the same fields](docs/event-schema.md):
 
 ```bash
-python3 src/detect.py --input path/to/events.jsonl --output local-results
+python3 src/detect.py --input events.jsonl --output local-results
 ```
 
-Keep real logs and personal information out of Git. The committed sample is deterministic and contains no real account data.
+## Files worth reading
 
-## Detection coverage
+- [detect.py](src/detect.py) — window logic, validation and deduplication.
+- [alerts.json](reports/alerts.json) and [evidence_timeline.csv](reports/evidence_timeline.csv) — the results and supporting events.
+- [Case notes](docs/incident-walkthrough.md) — eight failures followed by a success.
+- [Triage checklist](docs/triage-runbook.md) — what to check before closing or escalating an alert.
+- [Tests](tests/test_detection.py) — window boundaries, duplicate events, separate services and known misses.
 
-| Rule | Signal | Scope | Triage priority |
-|---|---|---|---|
-| AUTH-001 | At least 5 failures within 10 minutes | Same user, source IP and service | Medium |
-| AUTH-002 | Failures against at least 6 distinct users within 10 minutes | Same source IP and service | Medium |
-| AUTH-003 | A success with at least 5 earlier failures in the preceding 15 minutes | Same user, source IP and service | High |
+## What it misses
 
-[Rules and thresholds](rules/auth_rules.json) are configurable. Sliding windows include the lower time boundary; success correlation requires strictly earlier failures. A 30-minute cooldown per rule and scope reduces duplicate alerts. Evidence captures the events visible at the first qualifying trigger, not later events suppressed by cooldown.
+Slow attempts and attacks spread across multiple sources can stay below the thresholds. A success from a different IP is not correlated. Shared IPs and outdated service passwords can cause benign alerts.
 
-The first two patterns are hypotheses aligned with MITRE ATT&CK [Password Guessing](https://attack.mitre.org/techniques/T1110/001/) and [Password Spraying](https://attack.mitre.org/techniques/T1110/003/). Mapping a pattern does not prove the technique or malicious intent.
+The sample includes both a benign match and a slow sequence that is missed. It has no MFA or device context. This is an offline lab, not a deployed SIEM integration.
 
-## What to inspect
-
-- [Detection engine](src/detect.py): UTC ordering, schema validation, distinct-user counts, service boundaries and evidence references.
-- [Boundary and negative tests](tests/test_detection.py): threshold edges, out-of-order input, duplicate IDs, benign cases and known misses.
-- [Evidence timeline](reports/evidence_timeline.csv): original events supporting the emitted alerts.
-- [Triage runbook](docs/triage-runbook.md): what to verify before deciding whether to escalate.
-- [Synthetic scenario labels](data/scenario_labels.json): separate evaluation context that the detector never reads.
-
-```mermaid
-flowchart LR
-    A[Normalized JSONL events] --> B[Validate and sort in UTC]
-    B --> C[Sliding-window rules]
-    C --> D[Deduplicate by rule and scope]
-    D --> E[Alerts and evidence timeline]
-    E --> F[Analyst triage]
-```
-
-## Limits that matter
-
-This is a small batch-processing lab, not a production SIEM integration. Slow attempts, distributed sources and success from a different IP can evade these rules. Shared NAT addresses and stale service credentials can cause benign alerts. MFA, device context, asset criticality and follow-on activity are unavailable.
-
-One fixture deliberately produces a benign alert and another deliberately evades the short window. No production precision, recall, incident-response experience or SIEM deployment is claimed. Created with AI assistance; review the code, reproduce the results and explain the tradeoffs.
+[SQL analysis of the same logs](https://github.com/paulhorda/soc-log-analysis).

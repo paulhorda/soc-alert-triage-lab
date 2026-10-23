@@ -1,33 +1,25 @@
-# Authentication alert triage runbook
+# Triage checklist
 
-This is a proposed workflow for a lab. Follow the organization's authorization and incident-response procedures in an actual environment.
+## Check the events
 
-## 1. Validate the signal
+Open the alert's event IDs in the original log. Confirm the account, source, service, timestamps and outcomes. Check for duplicate ingestion or gaps in collection. Review related alerts before treating them as separate incidents.
 
-Open the alert's evidence IDs in the timeline and original log. Check source, account, service, timestamps, outcome and collection coverage. Confirm whether failure counts represent distinct events rather than duplicate ingestion. Check the configured window and cooldown.
+## Find the missing context
 
-## 2. Establish context
+- Is this a person or a service account? Does it have elevated access?
+- Who owns the source IP? Is it a shared VPN, proxy or NAT address?
+- Was there a password rotation, lockout or scheduled job change?
+- Did MFA succeed? Is the device familiar?
+- What happened after the successful login?
 
-- Is the account a person, privileged user or service account?
-- Who owns the source IP? Could it be a VPN, shared NAT, proxy or approved test host?
-- Was a password rotated, a scheduled job changed or a user locked out?
-- What do MFA, device identity, session details and user confirmation show?
-- Is there unusual activity after a successful authentication?
+Record unavailable information as unknown. In this lab, these questions cannot be answered from the authentication records alone.
 
-These details are absent from the lab logs. Record them as unknown rather than inventing them.
+## Decide what to do next
 
-## 3. Decide a disposition
+A success after repeated failures deserves an early review. Failures across many users need a check of source ownership and a wider time range. A stale service credential needs confirmation from its owner before the alert is closed.
 
-| Evidence | Proposed next step |
-|---|---|
-| Failures followed by a success with unknown context | Prioritize identity and session review; correlate related alerts |
-| Many users from one source | Check shared-source explanations and attempts across a longer window |
-| Confirmed stale service credential, expected source, no suspicious follow-on behavior | Record the operational cause and remediation; consider a narrow, expiring suppression |
-| Additional unauthorized-session evidence | Escalate through the response process with the evidence timeline |
-| Insufficient telemetry | Keep the conclusion open and request missing evidence |
+If there is evidence of unauthorized access, escalate with the timeline and follow the response procedure. Account suspension or session revocation needs the appropriate authorization; the detector does not perform either action.
 
-Blocking sources, disabling accounts and revoking sessions are proposed response options only after appropriate authorization and context. This repository performs none of those actions.
+## Leave a useful case note
 
-## 4. Record and improve
-
-Record the case time, rule version, evidence IDs, observed facts, hypotheses, missing evidence, disposition and rationale. Revisit thresholds using representative benign and malicious data. Avoid permanently allowlisting a source merely because one alert was benign. Track both nuisance alerts and known blind spots.
+Include the rule, event IDs, observed facts, missing evidence, disposition and reason. If a suppression is justified, keep it specific and give it a review date. Check whether the rule also missed related activity.
