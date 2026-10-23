@@ -1,0 +1,22 @@
+{
+  "input_sha256": "6bfe2b8727284cd397cb79ea7f1598371db4f9e84118a7ce0b11df762515c87c",
+  "events": 1231,
+  "alerts": 4,
+  "rules": {
+    "failure_threshold": 5,
+    "failure_window_seconds": 600,
+    "spray_user_threshold": 6,
+    "spray_window_seconds": 600,
+    "success_window_seconds": 900,
+    "alert_cooldown_seconds": 1800
+  },
+  "by_rule": {
+    "AUTH-001": 2,
+    "AUTH-002": 1,
+    "AUTH-003": 1
+  },
+  "by_severity": {
+    "high": 1,
+    "medium": 3
+  }
+}

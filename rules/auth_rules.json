@@ -1,0 +1,8 @@
+{
+  "failure_threshold": 5,
+  "failure_window_seconds": 600,
+  "spray_user_threshold": 6,
+  "spray_window_seconds": 600,
+  "success_window_seconds": 900,
+  "alert_cooldown_seconds": 1800
+}

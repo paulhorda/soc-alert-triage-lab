@@ -1,0 +1,36 @@
+{
+  "notice": "Synthetic fixture labels for manual evaluation only. Not read by the detector.",
+  "scenarios": [
+    {
+      "source_ip": "203.0.113.42",
+      "label": "simulated_suspicious",
+      "expected_rules": [
+        "AUTH-001",
+        "AUTH-003"
+      ],
+      "context": "Repeated failures followed by a success; intent cannot be established from auth telemetry alone."
+    },
+    {
+      "source_ip": "198.51.100.23",
+      "label": "simulated_suspicious",
+      "expected_rules": [
+        "AUTH-002"
+      ],
+      "context": "Failures across multiple accounts; password values are not logged, so spraying is a hypothesis."
+    },
+    {
+      "source_ip": "10.20.0.250",
+      "label": "benign_operational",
+      "expected_rules": [
+        "AUTH-001"
+      ],
+      "context": "Fictional backup service has an outdated stored credential; this explanation comes from the fixture, not the raw event fields."
+    },
+    {
+      "source_ip": "192.0.2.90",
+      "label": "simulated_slow_spray",
+      "expected_rules": [],
+      "context": "Deliberately missed: eight users over 140 minutes, below the short-window threshold."
+    }
+  ]
+}

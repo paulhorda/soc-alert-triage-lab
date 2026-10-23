@@ -1,0 +1,100 @@
+[
+  {
+    "alert_id": "AL-c0a6b712553e",
+    "rule_id": "AUTH-001",
+    "title": "Repeated authentication failures",
+    "severity": "medium",
+    "attack_hypothesis": "T1110.001",
+    "detected_at": "2026-09-15T14:04:00Z",
+    "window_start": "2026-09-15T14:00:00Z",
+    "source_ip": "203.0.113.42",
+    "service": "vpn",
+    "users": [
+      "analyst_demo"
+    ],
+    "failure_count": 5,
+    "evidence_event_ids": [
+      "EVT-01201",
+      "EVT-01202",
+      "EVT-01203",
+      "EVT-01204",
+      "EVT-01205"
+    ]
+  },
+  {
+    "alert_id": "AL-30bbacf82448",
+    "rule_id": "AUTH-003",
+    "title": "Successful login after repeated failures",
+    "severity": "high",
+    "attack_hypothesis": "T1110.001",
+    "detected_at": "2026-09-15T14:08:00Z",
+    "window_start": "2026-09-15T14:00:00Z",
+    "source_ip": "203.0.113.42",
+    "service": "vpn",
+    "users": [
+      "analyst_demo"
+    ],
+    "failure_count": 8,
+    "evidence_event_ids": [
+      "EVT-01201",
+      "EVT-01202",
+      "EVT-01203",
+      "EVT-01204",
+      "EVT-01205",
+      "EVT-01206",
+      "EVT-01207",
+      "EVT-01208",
+      "EVT-01209"
+    ]
+  },
+  {
+    "alert_id": "AL-fdb85197900e",
+    "rule_id": "AUTH-002",
+    "title": "Failures across multiple accounts",
+    "severity": "medium",
+    "attack_hypothesis": "T1110.003",
+    "detected_at": "2026-09-15T16:05:00Z",
+    "window_start": "2026-09-15T16:00:00Z",
+    "source_ip": "198.51.100.23",
+    "service": "vpn",
+    "users": [
+      "target_00",
+      "target_01",
+      "target_02",
+      "target_03",
+      "target_04",
+      "target_05"
+    ],
+    "failure_count": 6,
+    "evidence_event_ids": [
+      "EVT-01210",
+      "EVT-01211",
+      "EVT-01212",
+      "EVT-01213",
+      "EVT-01214",
+      "EVT-01215"
+    ]
+  },
+  {
+    "alert_id": "AL-89fe3498bb5a",
+    "rule_id": "AUTH-001",
+    "title": "Repeated authentication failures",
+    "severity": "medium",
+    "attack_hypothesis": "T1110.001",
+    "detected_at": "2026-09-15T17:04:00Z",
+    "window_start": "2026-09-15T17:00:00Z",
+    "source_ip": "10.20.0.250",
+    "service": "backup-console",
+    "users": [
+      "svc_backup_demo"
+    ],
+    "failure_count": 5,
+    "evidence_event_ids": [
+      "EVT-01218",
+      "EVT-01219",
+      "EVT-01220",
+      "EVT-01221",
+      "EVT-01222"
+    ]
+  }
+]
